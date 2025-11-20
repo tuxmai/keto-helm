@@ -101,14 +101,11 @@ export KETO_TAG=v25.4.0
 export KETO_PULL_POLICY=IfNotPresent
 export KETO_DSN=postgres://keto:keto@postgres-service:5432/keto?sslmode=require
 
-# Optional: Configure LoadBalancer services
-export KETO_READ_SERVICE_TYPE=LoadBalancer
-export KETO_READ_LOAD_BALANCER_IP=your-read-ip-address
-export KETO_READ_EXTERNAL_TRAFFIC_POLICY=Local
-
-export KETO_WRITE_SERVICE_TYPE=LoadBalancer
-export KETO_WRITE_LOAD_BALANCER_IP=your-write-ip-address
-export KETO_WRITE_EXTERNAL_TRAFFIC_POLICY=Local
+# Optional: Override service type (default is ClusterIP for internal access)
+# Only use LoadBalancer if you need external access and have proper network security
+# export KETO_READ_SERVICE_TYPE=LoadBalancer
+# export KETO_READ_LOAD_BALANCER_IP=your-read-ip-address
+# export KETO_READ_EXTERNAL_TRAFFIC_POLICY=Local
 
 # Deploy using helmfile
 helmfile apply
@@ -124,14 +121,18 @@ The helmfile supports the following environment variables:
 - `KETO_PULL_POLICY`: Image pull policy (default: `IfNotPresent`)
 
 **Service Configuration - Read Service:**
-- `KETO_READ_SERVICE_TYPE`: Service type for read service (default: `LoadBalancer`)
-- `KETO_READ_LOAD_BALANCER_IP`: LoadBalancer IP for read service
-- `KETO_READ_EXTERNAL_TRAFFIC_POLICY`: External traffic policy (default: `Local`)
+- `KETO_READ_SERVICE_TYPE`: Service type for read service (default: `ClusterIP` - internal access only, no auth protection)
+- `KETO_READ_LOAD_BALANCER_IP`: LoadBalancer IP for read service (only used if type is LoadBalancer)
+- `KETO_READ_EXTERNAL_TRAFFIC_POLICY`: External traffic policy (only used if type is LoadBalancer)
 
 **Service Configuration - Write Service:**
-- `KETO_WRITE_SERVICE_TYPE`: Service type for write service (default: `LoadBalancer`)
-- `KETO_WRITE_LOAD_BALANCER_IP`: LoadBalancer IP for write service
-- `KETO_WRITE_EXTERNAL_TRAFFIC_POLICY`: External traffic policy (default: `Local`)
+- `KETO_WRITE_SERVICE_TYPE`: Service type for write service (default: `ClusterIP` - internal access only, no auth protection)
+- `KETO_WRITE_LOAD_BALANCER_IP`: LoadBalancer IP for write service (only used if type is LoadBalancer)
+- `KETO_WRITE_EXTERNAL_TRAFFIC_POLICY`: External traffic policy (only used if type is LoadBalancer)
+
+**Note:** Keto services use `ClusterIP` by default for security, as Keto does not have built-in authentication. Services are accessible via k3s internal DNS:
+- Read: `http://keto-read.keto.svc.cluster.local:80`
+- Write: `http://keto-write.keto.svc.cluster.local:80`
 
 **Database Configuration:**
 - `KETO_DSN`: Database connection string (default: `memory`)
@@ -162,12 +163,17 @@ helm install keto ./helm/charts/keto
 # Install with production values
 helm install keto ./helm/charts/keto -f envs/prod/values.yaml
 
-# Install with custom values
+# Install with custom values (using ClusterIP for internal access)
 helm install keto ./helm/charts/keto \
-  --set service.read.type=LoadBalancer \
-  --set service.read.loadBalancerIP=your-ip \
-  --set service.write.type=LoadBalancer \
-  --set service.write.loadBalancerIP=your-ip
+  --set service.read.type=ClusterIP \
+  --set service.write.type=ClusterIP
+
+# Or if you need external access (not recommended without auth)
+# helm install keto ./helm/charts/keto \
+#   --set service.read.type=LoadBalancer \
+#   --set service.read.loadBalancerIP=your-ip \
+#   --set service.write.type=LoadBalancer \
+#   --set service.write.loadBalancerIP=your-ip
 ```
 
 #### Upgrading

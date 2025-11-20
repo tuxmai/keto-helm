@@ -10,9 +10,9 @@ image:
 service:
   read:
     enabled: true
-    type: LoadBalancer
-    loadBalancerIP: ""  # Set via helmfile
-    externalTrafficPolicy: Local
+    type: ClusterIP  # Use ClusterIP for internal access only (no auth protection)
+    loadBalancerIP: ""
+    externalTrafficPolicy: ""  # Not applicable for ClusterIP
     annotations: {}
     port: 80
     appProtocol: grpc
@@ -20,9 +20,9 @@ service:
       enabled: true
   write:
     enabled: true
-    type: LoadBalancer
-    loadBalancerIP: ""  # Set via helmfile
-    externalTrafficPolicy: Local
+    type: ClusterIP  # Use ClusterIP for internal access only (no auth protection)
+    loadBalancerIP: ""
+    externalTrafficPolicy: ""  # Not applicable for ClusterIP
     annotations: {}
     port: 80
     appProtocol: grpc

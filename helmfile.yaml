@@ -15,19 +15,19 @@ releases:
       
       # Service Configuration - Read Service
       - name: service.read.type
-        value: {{ env "KETO_READ_SERVICE_TYPE" | default "LoadBalancer" }}
+        value: {{ env "KETO_READ_SERVICE_TYPE" | default "ClusterIP" }}
       - name: service.read.loadBalancerIP
         value: {{ env "KETO_READ_LOAD_BALANCER_IP" | default "" }}
       - name: service.read.externalTrafficPolicy
-        value: {{ env "KETO_READ_EXTERNAL_TRAFFIC_POLICY" | default "Local" }}
+        value: {{ env "KETO_READ_EXTERNAL_TRAFFIC_POLICY" | default "" }}
       
       # Service Configuration - Write Service
       - name: service.write.type
-        value: {{ env "KETO_WRITE_SERVICE_TYPE" | default "LoadBalancer" }}
+        value: {{ env "KETO_WRITE_SERVICE_TYPE" | default "ClusterIP" }}
       - name: service.write.loadBalancerIP
         value: {{ env "KETO_WRITE_LOAD_BALANCER_IP" | default "" }}
       - name: service.write.externalTrafficPolicy
-        value: {{ env "KETO_WRITE_EXTERNAL_TRAFFIC_POLICY" | default "Local" }}
+        value: {{ env "KETO_WRITE_EXTERNAL_TRAFFIC_POLICY" | default "" }}
       
       # Database Configuration
       - name: keto.config.dsn
