@@ -78,3 +78,114 @@ To remove **all releases (only in test environments)**, do:
 ```sh
 $ helm del $(helm ls --all --short) --purge
 ```
+
+## Deployment with Helmfile
+
+This repository includes a `helmfile.yaml` for easier deployment management, especially for the Keto chart.
+
+### Prerequisites
+
+- [Helmfile](https://helmfile.readthedocs.io/) installed
+- Kubernetes cluster access configured
+
+### Using Helmfile for Keto
+
+The `helmfile.yaml` at the root of this repository provides environment variable-based configuration for deploying Keto.
+
+#### Basic Usage
+
+```bash
+# Set required environment variables
+export KETO_IMAGE_REPOSITORY=oryd/keto
+export KETO_TAG=v25.4.0
+export KETO_PULL_POLICY=IfNotPresent
+export KETO_DSN=postgres://keto:keto@postgres-service:5432/keto?sslmode=require
+
+# Optional: Configure LoadBalancer services
+export KETO_READ_SERVICE_TYPE=LoadBalancer
+export KETO_READ_LOAD_BALANCER_IP=your-read-ip-address
+export KETO_READ_EXTERNAL_TRAFFIC_POLICY=Local
+
+export KETO_WRITE_SERVICE_TYPE=LoadBalancer
+export KETO_WRITE_LOAD_BALANCER_IP=your-write-ip-address
+export KETO_WRITE_EXTERNAL_TRAFFIC_POLICY=Local
+
+# Deploy using helmfile
+helmfile apply
+```
+
+#### Environment Variables
+
+The helmfile supports the following environment variables:
+
+**Image Configuration:**
+- `KETO_IMAGE_REPOSITORY`: Container image repository (default: `oryd/keto`)
+- `KETO_TAG`: Container image tag (default: `v25.4.0`)
+- `KETO_PULL_POLICY`: Image pull policy (default: `IfNotPresent`)
+
+**Service Configuration - Read Service:**
+- `KETO_READ_SERVICE_TYPE`: Service type for read service (default: `LoadBalancer`)
+- `KETO_READ_LOAD_BALANCER_IP`: LoadBalancer IP for read service
+- `KETO_READ_EXTERNAL_TRAFFIC_POLICY`: External traffic policy (default: `Local`)
+
+**Service Configuration - Write Service:**
+- `KETO_WRITE_SERVICE_TYPE`: Service type for write service (default: `LoadBalancer`)
+- `KETO_WRITE_LOAD_BALANCER_IP`: LoadBalancer IP for write service
+- `KETO_WRITE_EXTERNAL_TRAFFIC_POLICY`: External traffic policy (default: `Local`)
+
+**Database Configuration:**
+- `KETO_DSN`: Database connection string (default: `memory`)
+
+**Replica Configuration:**
+- `KETO_REPLICA_COUNT`: Number of replicas (default: `2`)
+
+**Autoscaling Configuration:**
+- `KETO_AUTOSCALING_ENABLED`: Enable autoscaling (default: `true`)
+- `KETO_AUTOSCALING_MIN_REPLICAS`: Minimum replicas (default: `2`)
+- `KETO_AUTOSCALING_MAX_REPLICAS`: Maximum replicas (default: `10`)
+
+**Metrics Configuration:**
+- `KETO_METRICS_ENABLED`: Enable metrics service (default: `true`)
+
+#### Production Values
+
+Production-specific values are defined in `envs/prod/values.yaml`. These values are automatically loaded when using helmfile.
+
+#### Using Helm Directly
+
+You can still use Helm directly:
+
+```bash
+# Install with default values
+helm install keto ./helm/charts/keto
+
+# Install with production values
+helm install keto ./helm/charts/keto -f envs/prod/values.yaml
+
+# Install with custom values
+helm install keto ./helm/charts/keto \
+  --set service.read.type=LoadBalancer \
+  --set service.read.loadBalancerIP=your-ip \
+  --set service.write.type=LoadBalancer \
+  --set service.write.loadBalancerIP=your-ip
+```
+
+#### Upgrading
+
+```bash
+# Using helmfile
+helmfile apply
+
+# Using helm
+helm upgrade keto ./helm/charts/keto -f envs/prod/values.yaml
+```
+
+#### Uninstalling
+
+```bash
+# Using helmfile
+helmfile destroy
+
+# Using helm
+helm uninstall keto
+```

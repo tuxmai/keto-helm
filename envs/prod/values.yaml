@@ -1,0 +1,106 @@
+# Production values for Keto
+replicaCount: 2
+
+image:
+  repository: oryd/keto
+  pullPolicy: IfNotPresent
+  tag: "v25.4.0"
+
+# Service Configuration - Read Service
+service:
+  read:
+    enabled: true
+    type: LoadBalancer
+    loadBalancerIP: ""  # Set via helmfile
+    externalTrafficPolicy: Local
+    annotations: {}
+    port: 80
+    appProtocol: grpc
+    headless:
+      enabled: true
+  write:
+    enabled: true
+    type: LoadBalancer
+    loadBalancerIP: ""  # Set via helmfile
+    externalTrafficPolicy: Local
+    annotations: {}
+    port: 80
+    appProtocol: grpc
+    headless:
+      enabled: true
+  metrics:
+    enabled: true
+    type: ClusterIP
+    port: 80
+
+# Keto Configuration
+keto:
+  config:
+    serve:
+      read:
+        port: 4466
+      write:
+        port: 4467
+      metrics:
+        port: 4468
+    namespaces:
+      - id: 0
+        name: sample
+    dsn: "postgres://keto:keto@postgres-service:5432/keto?sslmode=require"
+
+# Deployment Configuration
+deployment:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPU:
+      type: Utilization
+      averageUtilization: 80
+    targetMemory:
+      type: Utilization
+      averageUtilization: 80
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 500m
+      memory: 256Mi
+
+# Ingress Configuration
+ingress:
+  read:
+    enabled: false
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: keto-read.example.com
+        paths:
+          - path: /read
+            pathType: Prefix
+    tls: []
+  write:
+    enabled: false
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: keto-write.example.com
+        paths:
+          - path: /write
+            pathType: Prefix
+    tls: []
+
+# Secret Configuration
+secret:
+  enabled: true
+  nameOverride: ""
+
+# Pod Distribution Budget
+pdb:
+  enabled: true
+  spec:
+    minAvailable: 1
+

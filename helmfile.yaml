@@ -1,0 +1,51 @@
+releases:
+  - name: keto
+    namespace: keto
+    chart: ./helm/charts/keto
+    values:
+      - envs/prod/values.yaml
+    set:
+      # Image Configuration
+      - name: image.tag
+        value: {{ env "KETO_TAG" | default "v25.4.0" }}
+      - name: image.pullPolicy
+        value: {{ env "KETO_PULL_POLICY" | default "IfNotPresent" }}
+      - name: image.repository
+        value: {{ env "KETO_IMAGE_REPOSITORY" | default "oryd/keto" }}
+      
+      # Service Configuration - Read Service
+      - name: service.read.type
+        value: {{ env "KETO_READ_SERVICE_TYPE" | default "LoadBalancer" }}
+      - name: service.read.loadBalancerIP
+        value: {{ env "KETO_READ_LOAD_BALANCER_IP" | default "" }}
+      - name: service.read.externalTrafficPolicy
+        value: {{ env "KETO_READ_EXTERNAL_TRAFFIC_POLICY" | default "Local" }}
+      
+      # Service Configuration - Write Service
+      - name: service.write.type
+        value: {{ env "KETO_WRITE_SERVICE_TYPE" | default "LoadBalancer" }}
+      - name: service.write.loadBalancerIP
+        value: {{ env "KETO_WRITE_LOAD_BALANCER_IP" | default "" }}
+      - name: service.write.externalTrafficPolicy
+        value: {{ env "KETO_WRITE_EXTERNAL_TRAFFIC_POLICY" | default "Local" }}
+      
+      # Database Configuration
+      - name: keto.config.dsn
+        value: {{ env "KETO_DSN" | default "memory" }}
+      
+      # Replica Configuration
+      - name: replicaCount
+        value: {{ env "KETO_REPLICA_COUNT" | default "2" }}
+      
+      # Autoscaling Configuration
+      - name: deployment.autoscaling.enabled
+        value: {{ env "KETO_AUTOSCALING_ENABLED" | default "true" }}
+      - name: deployment.autoscaling.minReplicas
+        value: {{ env "KETO_AUTOSCALING_MIN_REPLICAS" | default "2" }}
+      - name: deployment.autoscaling.maxReplicas
+        value: {{ env "KETO_AUTOSCALING_MAX_REPLICAS" | default "10" }}
+      
+      # Metrics Configuration
+      - name: service.metrics.enabled
+        value: {{ env "KETO_METRICS_ENABLED" | default "true" }}
+
